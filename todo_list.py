@@ -3,6 +3,14 @@ import os
 from datetime import datetime
 
 def validate_date_format(date_text):
+    """Check if the date text matches the required date format.
+
+    Args:
+        date_text (str): The date string to validate.
+
+    Returns:
+        bool: True if the date is in the correct format, False otherwise.
+    """
     try:
         datetime.strptime(date_text, "%d-%m-%Y")
         return True
@@ -10,20 +18,57 @@ def validate_date_format(date_text):
         return False
     
 class Task:
+    """A class to represent a task.
+
+    Attributes:
+        description (str): Description of the task.
+        due_date (str): The due date of the task in DD-MM-YYYY format.
+        status (str): The current status of the task ('pending' by default).
+    """
+
     def __init__(self, description, due_date, status="TODO"):
+        """Initialize a Task object with description, due date, and status.
+
+        Args:
+            description (str): Description of the task.
+            due_date (str): The due date of the task.
+            status (str, optional): The current status of the task. Defaults to 'TODO'.
+        """
         self.description = description
         self.due_date = due_date
         self.status = status
 
     def __str__(self):
+        """Return a string representation of the task.
+
+        Returns:
+            str: A string representing the task details.
+        """
         return f"Description: {self.description}\nDue Date: {self.due_date}\nStatus: {self.status}"
 
 class TodoList:
+    """A class to represent a list of tasks.
+
+    Attributes:
+        filename (str): The name of the file where tasks are saved.
+        tasks (list): A list of Task objects.
+    """
+
     def __init__(self, filename="tasks.json"):
+        """Initialize a TodoList object with a filename and load tasks.
+
+        Args:
+            filename (str, optional): The name of the file where tasks are saved. Defaults to 'tasks.json'.
+        """
         self.filename = filename
         self.tasks = self.load_tasks()
-
+        
     def load_tasks(self):
+        """Load tasks from a JSON file.
+
+        Returns:
+            list: A list of Task objects loaded from the file.
+        """
         if os.path.exists(self.filename):
             with open(self.filename, 'r') as file:
                 tasks = json.load(file)
@@ -32,18 +77,25 @@ class TodoList:
             return []
 
     def save_tasks(self):
+        """Save tasks to a JSON file."""
         with open(self.filename, 'w') as file:
-            tasks_data = [{'description': task.description, 'due_date': task.due_date, 'status': task.status} for task in self.tasks]
-            json.dump(tasks_data, file, indent=4)
+            json.dump([task.__dict__ for task in self.tasks], file, indent=4)
 
     def view_tasks(self):
-        if self.tasks:
-            for i, task in enumerate(self.tasks, start=1):
-                print(f"Task {i}:\n{task}\n")
-        else:
-            print("No tasks in the list.")
+        """Print all tasks in the list."""
+        print("\n".join(f"Task {i}:\n{task}" for i, task in enumerate(self.tasks, start=1)) or "No tasks in the list.")
 
-    def add_task(self, description, due_date, status="TODO"):
+    def add_task(self, description, due_date, status="pending"):
+        """Add a new task to the list.
+
+        Args:
+            description (str): Description of the task.
+            due_date (str): The due date of the task.
+            status (str, optional): The current status of the task. Defaults to 'pending'.
+
+        Returns:
+            None
+        """
         if not validate_date_format(due_date):
             print("Invalid date format. Please use DD-MM-YYYY.")
             return
@@ -52,27 +104,40 @@ class TodoList:
         self.save_tasks()
         print("Task added successfully.")
 
-    def update_task(self, task_index, new_description=None, new_due_date=None, new_status=None):
+    def update_task(self, task_index, **kwargs):
+        """Update an existing task in the list.
+
+        Args:
+            task_index (int): The index of the task to update.
+            **kwargs: Arbitrary keyword arguments representing task attributes to update.
+
+        Returns:
+            None
+        """
         task = self.get_task_by_index(task_index)
         if not task:
             print("Invalid task index.")
             return
-      
-        if new_due_date and not validate_date_format(new_due_date):
-            print("Invalid date format. Please use DD-MM-YYYY.")
-            return
-        
-        if new_description:
-            task.description = new_description
-        if new_due_date:
-            task.due_date = new_due_date
-        if new_status:
-            task.status = new_status
+        for attr, value in kwargs.items():
+            if attr == 'new_due_date' and value and not validate_date_format(value):
+                print("Invalid date format. Please use DD-MM-YYYY.")
+                return
+            if attr == 'new_status' and value not in ["pending", "completed"]:
+                print("Invalid status. Status should be 'pending' or 'completed'.")
+                return
+            setattr(task, attr, value)
         self.save_tasks()
         print("Task updated successfully.")
 
-
     def delete_task(self, task_index):
+        """Delete a task from the list.
+
+        Args:
+            task_index (int): The index of the task to delete.
+
+        Returns:
+            None
+        """
         task = self.get_task_by_index(task_index)
         if task:
             self.tasks.remove(task)
@@ -82,10 +147,15 @@ class TodoList:
             print("Invalid task index.")
 
     def get_task_by_index(self, task_index):
-        try:
-            return self.tasks[task_index - 1]
-        except IndexError:
-            return None
+        """Get a task by its index in the list.
+
+        Args:
+            task_index (int): The index of the task to retrieve.
+
+        Returns:
+            Task: The Task object at the specified index, or None if the index is invalid.
+        """
+        return self.tasks[task_index - 1] if 0 < task_index <= len(self.tasks) else None
 
 if __name__ == "__main__":
     todo_list = TodoList()
@@ -109,10 +179,21 @@ if __name__ == "__main__":
         elif choice == '3':
             todo_list.view_tasks()
             task_index = int(input("Enter the index of the task to update: "))
+            updates = {}
             new_description = input("Enter new description (press Enter to skip): ")
-            new_due_date = input("Enter new due date (YYYY-MM-DD, press Enter to skip): ")
+            if new_description:
+                updates['new_description'] = new_description
+            new_due_date = input("Enter new due date (DD-MM-YYYY, press Enter to skip): ")
+            if new_due_date:
+                updates['new_due_date'] = new_due_date
             new_status = input("Enter new status (press Enter to skip): ")
-            todo_list.update_task(task_index, new_description, new_due_date, new_status)
+            if new_status:
+                updates['new_status'] = new_status
+
+            if updates:
+                todo_list.update_task(task_index, **updates)
+            else:
+                print("No updates provided.")
         elif choice == '4':
             todo_list.view_tasks()
             task_index = int(input("Enter the index of the task to delete: "))
