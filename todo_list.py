@@ -99,6 +99,10 @@ class TodoList:
         if not validate_date_format(due_date):
             print("Invalid date format. Please use DD-MM-YYYY.")
             return
+        if status not in ('pending', 'completed'):
+            print("Invalid status. Please use 'pending' or 'completed'.")
+            return
+        
         new_task = Task(description, due_date, status)
         self.tasks.append(new_task)
         self.save_tasks()
@@ -175,10 +179,17 @@ if __name__ == "__main__":
         elif choice == '2':
             description = input("Enter task description: ")
             due_date = input("Enter due date (DD-MM-YYYY): ")
-            todo_list.add_task(description, due_date)
+            status = input("Enter status ('pending' or 'completed') - you can press Enter if the task's status is 'pending': ")
+            todo_list.add_task(description, due_date, status)
         elif choice == '3':
             todo_list.view_tasks()
-            task_index = int(input("Enter the index of the task to update: "))
+            while True:
+                task_index = (input("Enter the index of the task to update: "))
+                if task_index.isnumeric():
+                    task_index = int(task_index)
+                    break
+                else:
+                    print('Task index must be a number')
             updates = {}
             new_description = input("Enter new description (press Enter to skip): ")
             if new_description:
@@ -186,7 +197,7 @@ if __name__ == "__main__":
             new_due_date = input("Enter new due date (DD-MM-YYYY, press Enter to skip): ")
             if new_due_date:
                 updates['due_date'] = new_due_date
-            new_status = input("Enter new status 'pending' or 'completed' (press Enter to skip): ")
+            new_status = input("Enter new status 'pending'  or 'completed' (press Enter to skip): ")
             if new_status:
                 updates['status'] = new_status
 
