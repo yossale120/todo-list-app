@@ -119,10 +119,10 @@ class TodoList:
             print("Invalid task index.")
             return
         for attr, value in kwargs.items():
-            if attr == 'new_due_date' and value and not validate_date_format(value):
+            if attr == 'due_date' and value and not validate_date_format(value):
                 print("Invalid date format. Please use DD-MM-YYYY.")
                 return
-            if attr == 'new_status' and value not in ["pending", "completed"]:
+            if attr == 'status' and value not in ["pending", "completed"]:
                 print("Invalid status. Status should be 'pending' or 'completed'.")
                 return
             setattr(task, attr, value)
@@ -182,13 +182,13 @@ if __name__ == "__main__":
             updates = {}
             new_description = input("Enter new description (press Enter to skip): ")
             if new_description:
-                updates['new_description'] = new_description
+                updates['description'] = new_description
             new_due_date = input("Enter new due date (DD-MM-YYYY, press Enter to skip): ")
             if new_due_date:
-                updates['new_due_date'] = new_due_date
-            new_status = input("Enter new status (press Enter to skip): ")
+                updates['due_date'] = new_due_date
+            new_status = input("Enter new status 'pending' or 'completed' (press Enter to skip): ")
             if new_status:
-                updates['new_status'] = new_status
+                updates['status'] = new_status
 
             if updates:
                 todo_list.update_task(task_index, **updates)
